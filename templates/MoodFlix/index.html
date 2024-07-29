@@ -1,0 +1,657 @@
+{% load custom_filters %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Movie Recommendations</title>
+</head>
+<style>   
+    @import "https://unpkg.com/open-props/easings.min.css";
+
+    @custom-media --motionOK (prefers-reduced-motion: no-preference);
+
+    body {
+        align-items: center;
+        display: flex;
+        justify-content: center;
+        height: 100vh;
+    }
+
+    * {
+    box-sizing: border-box;
+    margin: 0;
+    }
+
+    html {
+    block-size: 100%;
+    color-scheme: light;
+
+    &[data-theme="dark"] {
+        color-scheme: dark;
+
+        @supports not (color-scheme: dark) {
+        background: #111; 
+        }
+    }
+    }
+
+    body {
+    min-block-size: 100%;
+    font-family: system-ui, sans-serif;
+    
+    display: grid;
+    place-content: center;
+    }
+
+    .github-corner {
+    fill: hotpink;
+    color: Canvas; 
+    
+        &:hover .octo-arm {
+            animation: octocat-wave 560ms ease-in-out
+        }
+
+    @nest [data-theme="dark"] & {
+        fill: indigo;
+    }
+    }
+
+    @keyframes octocat-wave{
+    0%,100% {
+        transform: rotate(0)
+    }
+    20%,60% {
+        transform: rotate(-25deg)
+    }
+    40%,80% {
+        transform: rotate(10deg)
+    }
+    }
+    .sun-and-moon > :is(.moon, .sun, .sun-beams) {
+        transform-origin: center;
+    }
+    
+    .sun-and-moon > :is(.moon, .sun) {
+        fill: var(--icon-fill);
+    }
+    
+    .theme-toggle:hover, .theme-toggle:focus-visible > .sun-and-moon > :is(.moon, .sun) {
+        fill: var(--icon-fill-hover);
+    }
+    
+    .sun-and-moon > .sun-beams {
+        stroke: var(--icon-fill);
+        stroke-width: 2px;
+    }
+    
+    .theme-toggle:hover .sun-and-moon > .sun-beams,
+    .theme-toggle:focus-visible .sun-and-moon > .sun-beams {
+        stroke: var(--icon-fill-hover);
+    }
+    
+    [data-theme="dark"] .sun-and-moon > .sun {
+        transform: scale(1.75);
+    }
+    
+    [data-theme="dark"] .sun-and-moon > .sun-beams {
+        opacity: 0;
+    }
+    
+    [data-theme="dark"] .sun-and-moon > .moon > circle {
+        transform: translateX(-7px);
+    }
+    
+    @supports (cx: 1) {
+        [data-theme="dark"] .sun-and-moon > .moon > circle {
+            cx: 17;
+            transform: translateX(0);
+        }
+    }
+    
+    @media (prefers-reduced-motion: no-preference) {
+        .sun-and-moon > .sun {
+            transition: transform .5s var(--ease-elastic-3);
+        }
+    
+        .sun-and-moon > .sun-beams {
+            transition: transform .5s var(--ease-elastic-4), opacity .5s var(--ease-3);
+        }
+    
+        .sun-and-moon .moon > circle {
+            transition: transform .25s var(--ease-out-5);
+        }
+    
+        @supports (cx: 1) {
+            .sun-and-moon .moon > circle {
+                transition: cx .25s var(--ease-out-5);
+            }
+        }
+    
+        [data-theme="dark"] .sun-and-moon > .sun {
+            transition-timing-function: var(--ease-3);
+            transition-duration: .25s;
+            transform: scale(1.75);
+        }
+    
+        [data-theme="dark"] .sun-and-moon > .sun-beams {
+            transition-duration: .15s;
+            transform: rotateZ(-25deg);
+        }
+    
+        [data-theme="dark"] .sun-and-moon > .moon > circle {
+            transition-duration: .5s;
+            transition-delay: .25s;
+        }
+    }
+    
+    .sun-and-moon {
+        > :is(.moon, .sun, .sun-beams) {
+            transform-origin: center center;
+        }
+    
+        > :is(.moon, .sun) {
+            fill: var(--icon-fill);
+    
+            .theme-toggle:hover, .theme-toggle:focus-visible > & {
+                fill: var(--icon-fill-hover);
+            }
+        }
+    
+        > .sun-beams {
+            stroke: var(--icon-fill);
+            stroke-width: 2px;
+    
+            .theme-toggle:hover .sun-and-moon > .sun-beams,
+            .theme-toggle:focus-visible .sun-and-moon > .sun-beams {
+                stroke: var(--icon-fill-hover);
+            }
+        }
+    
+        [data-theme="dark"] {
+            > .sun {
+                transform: scale(1.75);
+            }
+    
+            > .sun-beams {
+                opacity: 0;
+            }
+    
+            > .moon > circle {
+                transform: translateX(-7px);
+    
+                @supports (cx: 1) {
+                    transform: translateX(0);
+                    cx: 17;
+                }
+            }
+        }
+    
+        @media (--motionOK) {
+            > .sun {
+                transition: transform .5s var(--ease-elastic-3);
+            }
+    
+            > .sun-beams {
+                transition: 
+                    transform .5s var(--ease-elastic-4),
+                    opacity .5s var(--ease-3);
+            }
+    
+            .moon > circle {
+                transition: transform .25s var(--ease-out-5);
+    
+                @supports (cx: 1) {
+                    transition: cx .25s var(--ease-out-5);
+                }
+            }
+    
+            [data-theme="dark"] {
+                > .sun {
+                    transform: scale(1.75);
+                    transition-timing-function: var(--ease-3);
+                    transition-duration: .25s;
+                }
+    
+                > .sun-beams {
+                    transform: rotateZ(-25deg);
+                    transition-duration: .15s;
+                }
+    
+                > .moon > circle {
+                    transition-delay: .25s;
+                    transition-duration: .5s;
+                }
+            }
+        }
+    }
+    
+    .theme-toggle {
+        --size: 2rem;
+        --icon-fill: hsl(210 10% 30%);
+        --icon-fill-hover: hsl(210 10% 15%);
+    
+        background: none;
+        border: none;
+        padding: 0;
+    
+        inline-size: var(--size);
+        block-size: var(--size);
+        aspect-ratio: 1;
+        border-radius: 50%;
+    
+        cursor: pointer;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+    
+        outline-offset: 5px;
+    
+        > svg {
+            inline-size: 100%;
+            block-size: 100%;
+            stroke-linecap: round;
+        }
+    
+        [data-theme="dark"] {
+            --icon-fill: hsl(0, 0%, 100%);
+            --icon-fill-hover: hsl(210 15% 90%);
+        }
+    
+        @media (hover: none) {
+            --size: 48px;
+        }
+    }
+
+    [data-theme="dark"] {
+        .form {
+            background-color: #15172b;
+            border-radius: 20px;
+            box-sizing: border-box;
+            height: auto; /* Adjusted height to auto */
+            padding: 20px;
+            width: 320px;
+        }
+
+        .title {
+            color: #eee;
+            font-family: sans-serif;
+            font-size: 36px;
+            font-weight: 600;
+            margin-top: 30px;
+        }
+
+        .subtitle {
+            color: #eee;
+            font-family: sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .input-container {
+            height: 50px;
+            position: relative;
+            width: 100%;
+        }
+
+        .ic1 {
+            margin-top: 40px;
+        }
+
+        .ic2 {
+            margin-top: 30px;
+        }
+
+        .input {
+            background-color: #303245;
+            border-radius: 12px;
+            border: 0;
+            box-sizing: border-box;
+            color: #eee;
+            font-size: 18px;
+            height: 100%;
+            outline: 0;
+            padding: 4px 20px 0;
+            width: 100%;
+        }
+
+        .cut {
+            background-color: #15172b;
+            border-radius: 10px;
+            height: 20px;
+            left: 20px;
+            position: absolute;
+            top: -20px;
+            transform: translateY(0);
+            transition: transform 200ms;
+            width: 76px;
+        }
+
+        .cut-short {
+            width: 50px;
+        }
+
+        .input:focus ~ .cut,
+        .input:not(:placeholder-shown) ~ .cut {
+            transform: translateY(8px);
+        }
+
+        .placeholder {
+            color: #65657b;
+            font-family: sans-serif;
+            left: 20px;
+            line-height: 14px;
+            pointer-events: none;
+            position: absolute;
+            transform-origin: 0 50%;
+            transition: transform 200ms, color 200ms;
+            top: 20px;
+        }
+
+        .input:focus ~ .placeholder,
+        .input:not(:placeholder-shown) ~ .placeholder {
+            transform: translateY(-30px) translateX(10px) scale(0.75);
+        }
+
+        .input:not(:placeholder-shown) ~ .placeholder {
+            color: #808097;
+        }
+
+        .input:focus ~ .placeholder {
+            color: #dc2f55;
+        }
+
+        .submit {
+            background-color: #08d;
+            border-radius: 12px;
+            border: 0;
+            box-sizing: border-box;
+            color: #eee;
+            cursor: pointer;
+            font-size: 18px;
+            height: 50px;
+            margin-top: 38px;
+            text-align: center;
+            width: 100%;
+        }
+
+        .submit:active {
+            background-color: #06b;
+        }
+    }
+
+    [data-theme="light"] {
+
+.form {
+  background-color: #fff;
+  border-radius: 20px;
+  box-sizing: border-box;
+  height: auto;
+  padding: 20px;
+  width: 320px;
+}
+
+.title {
+  color: #333;
+  font-family: sans-serif;
+  font-size: 36px;
+  font-weight: 600;
+  margin-top: 30px;
+}
+
+.subtitle {
+  color: #333;
+  font-family: sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 10px;
+}
+
+.input-container {
+  height: 50px;
+  position: relative;
+  width: 100%;
+}
+
+.ic1 {
+  margin-top: 40px;
+}
+
+.ic2 {
+  margin-top: 30px;
+}
+
+.input {
+  background-color: #fff;
+  color: #333;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  box-sizing: border-box;
+  font-size: 18px;
+  height: 100%;
+  outline: 0;
+  padding: 4px 20px 0;
+  width: 100%;
+}
+
+.cut {
+  background-color: #fff;
+  border-radius: 10px;
+  height: 20px;
+  left: 20px;
+  position: absolute;
+  top: -20px;
+  transform: translateY(0);
+  transition: transform 200ms;
+  width: 76px;
+}
+
+.cut-short {
+  width: 50px;
+}
+
+.input:focus ~ .cut,
+.input:not(:placeholder-shown) ~ .cut {
+  transform: translateY(8px);
+}
+
+.placeholder {
+  color: #999;
+  font-family: sans-serif;
+  left: 20px;
+  line-height: 14px;
+  pointer-events: none;
+  position: absolute;
+  transform-origin: 0 50%;
+  transition: transform 200ms, color 200ms;
+  top: 20px;
+}
+
+.input:focus ~ .placeholder,
+.input:not(:placeholder-shown) ~ .placeholder {
+  transform: translateY(-30px) translateX(10px) scale(0.75);
+}
+
+.input:not(:placeholder-shown) ~ .placeholder {
+  color: #808097;
+}
+
+.input:focus ~ .placeholder {
+  color: #333;
+}
+
+.submit {
+  background-color: #0066cc;
+  border-radius: 12px;
+  border: 0;
+  box-sizing: border-box;
+  color: #fff;
+  cursor: pointer;
+  font-size: 18px;
+  height: 50px;
+  margin-top: 38px;
+  text-align: center;
+  width: 100%;
+}
+
+.submit:active {
+  background-color: #0055aa;
+}
+    }
+
+    @media (max-width: 600px) {
+            .form {
+                width: 90%;
+                padding: 10px;
+            }
+
+            .title {
+                font-size: 28px;
+                margin-top: 20px;
+            }
+
+            .subtitle {
+                font-size: 14px;
+                margin-top: 8px;
+            }
+
+            .input-container {
+                height: 40px;
+            }
+
+            .input {
+                font-size: 16px;
+                padding: 2px 10px 0;
+            }
+
+            .cut {
+                height: 18px;
+                top: -18px;
+                width: 68px;
+            }
+
+            .placeholder {
+                font-size: 14px;
+                top: 16px;
+            }
+
+            .input:focus ~ .placeholder,
+            .input:not(:placeholder-shown) ~ .placeholder {
+                transform: translateY(-26px) translateX(8px) scale(0.75);
+            }
+
+            .submit {
+                height: 40px;
+                font-size: 16px;
+                margin-top: 30px;
+            }
+        }
+</style>
+<body>
+    <h1>Movie Recommendations</h1>
+
+    <button class="theme-toggle" id="theme-toggle" title="Toggles light & dark" aria-label="auto" aria-live="polite">
+        <svg class="sun-and-moon" aria-hidden="true" width="24" height="24" viewBox="0 0 24 24">
+          <mask class="moon" id="moon-mask">
+            <rect x="0" y="0" width="100%" height="100%" fill="white" />
+            <circle cx="24" cy="10" r="6" fill="black" />
+          </mask>
+          <circle class="sun" cx="12" cy="12" r="6" mask="url(#moon-mask)" fill="currentColor" />
+          <g class="sun-beams" stroke="currentColor">
+                <line x1="12" y1="1" x2="12" y2="3" />
+                <line x1="12" y1="21" x2="12" y2="23" />
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                <line x1="1" y1="12" x2="3" y2="12" />
+                <line x1="21" y1="12" x2="23" y2="12" />
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+           </g>
+        </svg>
+      </button>
+
+      <div class="form">
+        <form method="post" action="{% url 'results.html' %}">
+            {% csrf_token %}
+            <div class="input-container ic1">
+                {{ form.mood|add_class:"input" }}
+                <div class="cut cut-short"></div>
+                <label for="mood" class="placeholder">Mood</label>
+            </div>
+            <div class="input-container ic2">
+                {{ form.language|add_class:"input" }}
+                <div class="cut"></div>
+                <label for="language" class="placeholder">Language</label>
+            </div>
+            <div class="input-container ic2">
+                {{ form.country|add_class:"input" }}
+                <div class="cut cut"></div>
+                <label for="country" class="placeholder">Country</label>
+            </div>
+            <button type="submit" class="submit">Fetch Movies</button>
+        </form>
+    </div>
+
+   
+    
+    <script>
+        const storageKey = 'theme-preference'
+
+        const onClick = () => {
+        // flip current value
+        theme.value = theme.value === 'light'
+            ? 'dark'
+            : 'light'
+
+        setPreference()
+        }
+
+        const getColorPreference = () => {
+        if (localStorage.getItem(storageKey))
+            return localStorage.getItem(storageKey)
+        else
+            return window.matchMedia('(prefers-color-scheme: dark)').matches
+            ? 'dark'
+            : 'light'
+        }
+
+        const setPreference = () => {
+        localStorage.setItem(storageKey, theme.value)
+        reflectPreference()
+        }
+
+        const reflectPreference = () => {
+        document.firstElementChild
+            .setAttribute('data-theme', theme.value)
+
+        document
+            .querySelector('#theme-toggle')
+            ?.setAttribute('aria-label', theme.value)
+        }
+
+        const theme = {
+        value: getColorPreference(),
+        }
+
+        // set early so no page flashes / CSS is made aware
+        reflectPreference()
+
+        window.onload = () => {
+        // set on load so screen readers can see latest value on the button
+        reflectPreference()
+
+        // now this script can find and listen for clicks on the control
+        document
+            .querySelector('#theme-toggle')
+            .addEventListener('click', onClick)
+        }
+
+        // sync with system changes
+        window
+        .matchMedia('(prefers-color-scheme: dark)')
+        .addEventListener('change', ({matches:isDark}) => {
+            theme.value = isDark ? 'dark' : 'light'
+            setPreference()
+        })
+    </script>
+</body>
+</html>

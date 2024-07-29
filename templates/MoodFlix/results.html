@@ -1,0 +1,620 @@
+{% load custom_filters %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <title>Movie Recommendations</title>
+<style>
+        @import "https://unpkg.com/open-props/easings.min.css";
+        @custom-media --motionOK (prefers-reduced-motion: no-preference);
+
+        .no-display {
+            display: none;
+        }
+
+        .read-more-btn {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .read-more-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .long-description {
+            display: none;
+            text-align: left;
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+            border-radius: 0 0 5px 5px;
+            font-size: 16px;
+        }
+
+        .show {
+            display: block;
+        }
+
+        #myBtn, #myBtn2 {
+            display: none; /* Hidden by default */
+            position: fixed; /* Fixed/sticky position */
+            bottom: 20px; /* Place the button at the bottom of the page */
+            right: 30px; /* Place the button 30px from the right */
+            z-index: 99; /* Make sure it does not overlap */
+            border: none; /* Remove borders */
+            outline: none; /* Remove outline */
+            background-color: red; /* Set a background color */
+            color: white; /* Text color */
+            cursor: pointer; /* Add a mouse pointer on hover */
+            padding: 15px; /* Some padding */
+            border-radius: 10px; /* Rounded corners */
+            font-size: 18px; /* Increase font size */
+        }
+        
+        #myBtn:hover, #myBtn:hover {
+            background-color: #555; /* Add a dark-grey background on hover */
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            background-color: #2196F3;
+            padding: 10px;
+            align-items: center;
+            border-radius: 20px;
+            gap: 0;
+        }
+
+        .grid-item {
+            background-color: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(0, 0, 0, 0);
+            padding: 20px;
+            font-size: 30px;
+            text-align: center;
+            margin: 0;
+            height: 1000px;
+        }
+
+        .grid-item img {
+            max-width: 100%;
+            height: 100%;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+        }
+
+        html {
+            block-size: 100%;
+            color-scheme: light;
+            scroll-behavior: smooth;
+            justify-content: center;
+
+            &[data-theme="dark"] {
+                color-scheme: dark;
+
+                @supports not (color-scheme: dark) {
+                    background: #111;
+                }
+
+                /* Dark Theme Styles */
+                body {
+                    background: #111;            
+                }
+                
+                h1 {
+                    color: white;
+                }
+
+                .grid-container {
+                    background-color: #15172b;
+                }
+
+                .grid-item {
+                    background-color: rgba(255, 255, 255, 0.1);
+                    color: white;
+                }
+
+                .read-more-btn {
+                    background-color: #444;
+                    color: white;
+                }
+
+                .read-more-btn:hover {
+                    background-color: #666;
+                }
+
+                .long-description {
+                    background-color:  #666;
+                }
+            }
+
+            &[data-theme="light"] {
+                /* Light Theme Styles */
+                .grid-container {
+                    background-color: #2196F3;
+                }
+
+        
+                .read-more-btn {
+                    background-color: #007bff;
+                    color: white;
+                }
+
+                .read-more-btn:hover {
+                    background-color: #0056b3;
+                }
+            }
+        }
+
+        body {
+            min-block-size: 100%;
+            font-family: system-ui, sans-serif;
+            display: grid;
+            place-content: center;
+        }
+
+        .github-corner {
+            fill: hotpink;
+            color: Canvas; 
+            &:hover .octo-arm {
+                animation: octocat-wave 560ms ease-in-out
+            }
+
+            @nest [data-theme="dark"] & {
+                fill: indigo;
+            }
+        }
+
+        @keyframes octocat-wave {
+            0%, 100% {
+                transform: rotate(0)
+            }
+            20%, 60% {
+                transform: rotate(-25deg)
+            }
+            40%, 80% {
+                transform: rotate(10deg)
+            }
+        }
+
+        .sun-and-moon > :is(.moon, .sun, .sun-beams) {
+            transform-origin: center;
+        }
+        
+        .sun-and-moon > :is(.moon, .sun) {
+            fill: var(--icon-fill);
+        }
+        
+        .theme-toggle:hover, .theme-toggle:focus-visible > .sun-and-moon > :is(.moon, .sun) {
+            fill: var(--icon-fill-hover);
+        }
+        
+        .sun-and-moon > .sun-beams {
+            stroke: var(--icon-fill);
+            stroke-width: 2px;
+        }
+        
+        .theme-toggle:hover .sun-and-moon > .sun-beams,
+        .theme-toggle:focus-visible .sun-and-moon > .sun-beams {
+            stroke: var(--icon-fill-hover);
+        }
+        
+        [data-theme="dark"] .sun-and-moon > .sun {
+            transform: scale(1.75);
+        }
+        
+        [data-theme="dark"] .sun-and-moon > .sun-beams {
+            opacity: 0;
+        }
+        
+        [data-theme="dark"] .sun-and-moon > .moon > circle {
+            transform: translateX(-7px);
+        }
+        
+        @supports (cx: 1) {
+            [data-theme="dark"] .sun-and-moon > .moon > circle {
+                cx: 17;
+                transform: translateX(0);
+            }
+        }
+        
+        @media (prefers-reduced-motion: no-preference) {
+            .sun-and-moon > .sun {
+                transition: transform .5s var(--ease-elastic-3);
+            }
+        
+            .sun-and-moon > .sun-beams {
+                transition: transform .5s var(--ease-elastic-4), opacity .5s var(--ease-3);
+            }
+        
+            .sun-and-moon .moon > circle {
+                transition: transform .25s var(--ease-out-5);
+            }
+        
+            @supports (cx: 1) {
+                .sun-and-moon .moon > circle {
+                    transition: cx .25s var(--ease-out-5);
+                }
+            }
+        
+            [data-theme="dark"] .sun-and-moon > .sun {
+                transition-timing-function: var(--ease-3);
+                transition-duration: .25s;
+                transform: scale(1.75);
+            }
+        
+            [data-theme="dark"] .sun-and-moon > .sun-beams {
+                transition-duration: .15s;
+                transform: rotateZ(-25deg);
+            }
+        
+            [data-theme="dark"] .sun-and-moon > .moon > circle {
+                transition-duration: .5s;
+                transition-delay: .25s;
+            }
+        }
+        
+        .sun-and-moon {
+            > :is(.moon, .sun, .sun-beams) {
+                transform-origin: center center;
+            }
+        
+            > :is(.moon, .sun) {
+                fill: var(--icon-fill);
+        
+                .theme-toggle:hover, .theme-toggle:focus-visible > & {
+                    fill: var(--icon-fill-hover);
+                }
+            }
+        
+            > .sun-beams {
+                stroke: var(--icon-fill);
+                stroke-width: 2px;
+        
+                .theme-toggle:hover .sun-and-moon > .sun-beams,
+                .theme-toggle:focus-visible .sun-and-moon > .sun-beams {
+                    stroke: var(--icon-fill-hover);
+                }
+            }
+        
+            [data-theme="dark"] {
+                > .sun {
+                    transform: scale(1.75);
+                }
+        
+                > .sun-beams {
+                    opacity: 0;
+                }
+        
+                > .moon > circle {
+                    transform: translateX(-7px);
+        
+                    @supports (cx: 1) {
+                        transform: translateX(0);
+                        cx: 17;
+                    }
+                }
+            }
+        
+            @media (--motionOK) {
+                > .sun {
+                    transition: transform .5s var(--ease-elastic-3);
+                }
+        
+                > .sun-beams {
+                    transition: 
+                        transform .5s var(--ease-elastic-4),
+                        opacity .5s var(--ease-3);
+                }
+        
+                .moon > circle {
+                    transition: transform .25s var(--ease-out-5);
+        
+                    @supports (cx: 1) {
+                        transition: cx .25s var(--ease-out-5);
+                    }
+                }
+        
+                [data-theme="dark"] {
+                    > .sun {
+                        transform: scale(1.75);
+                        transition-timing-function: var(--ease-3);
+                        transition-duration: .25s;
+                    }
+        
+                    > .sun-beams {
+                        transform: rotateZ(-25deg);
+                        transition-duration: .15s;
+                    }
+        
+                    > .moon > circle {
+                        transition-delay: .25s;
+                        transition-duration: .5s;
+                    }
+                }
+            }
+        }
+        
+        .theme-toggle {
+            --size: 2rem;
+            --icon-fill: hsl(210 10% 30%);
+            --icon-fill-hover: hsl(210 10% 15%);
+        
+            background: none;
+            border: none;
+            padding: 0;
+        
+            inline-size: var(--size);
+            block-size: var(--size);
+            aspect-ratio: 1;
+            border-radius: 50%;
+        
+            cursor: pointer;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        
+            outline-offset: 5px;
+        
+            > svg {
+                inline-size: 100%;
+                block-size: 100%;
+                stroke-linecap: round;
+            }
+        
+            [data-theme="dark"] {
+                --icon-fill: hsl(0, 0%, 100%);
+                --icon-fill-hover: hsl(210 15% 90%);
+            }
+        
+            @media (hover: none) {
+                --size: 48px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
+        }
+</style>
+</head>
+<body>
+    <h1>Movies for "{{ selected_mood }}"</h1>
+
+    <div id="spinner1">
+        <div class="d-flex justify-content-center mt-5">
+            <div class="spinner-border text-success" role="status">
+              <span class="visually-hidden"></span>
+            </div>
+        </div>
+    </div>
+    
+    <div id="movieList" class="no-display">
+        <button class="theme-toggle" id="theme-toggle" title="Toggles light & dark" aria-label="auto" aria-live="polite">
+        <svg class="sun-and-moon" aria-hidden="true" width="24" height="24" viewBox="0 0 24 24">
+          <mask class="moon" id="moon-mask">
+            <rect x="0" y="0" width="100%" height="100%" fill="white" />
+            <circle cx="24" cy="10" r="6" fill="black" />
+          </mask>
+          <circle class="sun" cx="12" cy="12" r="6" mask="url(#moon-mask)" fill="currentColor" />
+          <g class="sun-beams" stroke="currentColor">
+                <line x1="12" y1="1" x2="12" y2="3" />
+                <line x1="12" y1="21" x2="12" y2="23" />
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                <line x1="1" y1="12" x2="3" y2="12" />
+                <line x1="21" y1="12" x2="23" y2="12" />
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+           </g>
+        </svg>
+        </button>
+        <button onclick="sortRatings()">Sort by Rating</button>
+        <button onclick="sortDates()">Sort by Release Date</button>
+        <button onclick="navigateToForm()" id="myBtn" style="right: 100px">Back to Form</button>
+        <button onclick="backToTop()" id="myBtn2">▲</button>
+        <div class="grid-container">
+            {% for movie in movies %}
+                <div class="grid-item" data-vote-average="{{ movie.vote_average }}" data-release_date="{{ movie.release_date }}">
+                    <h2>{{ movie.title }}</h2>
+                    <button class="read-more-btn" onclick="toggleDescription({{ forloop.counter }})">Description</button>
+                    <div class="long-description" id="description-{{ forloop.counter }}">
+                        <p>{{ movie.overview }}</p>
+                    </div>
+                    <p>Release Date: {{ movie.release_date }}</p>
+                    <p>Rating: {{ movie.vote_average }}/10</p>
+                    {% if movie.poster_path %}
+                        <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" alt="{{ movie.title }}" style="height: 600px;">
+                    {% else %}
+                        <p>No poster available</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        const spinner= document.getElementById("spinner1")
+        const list=document.getElementById("movieList")
+
+        $.ajax({
+            type: 'GET',
+            url: '/',
+            success: function(res) {
+                setTimeout(()=>{
+                    spinner.classList.add('no-display');
+                    movieList.classList.remove('no-display');
+                }, 500)
+                
+                 
+            },
+            error: function(er) {
+                console.log("error")
+            },
+        })
+
+        function toggleDescription(id) {
+            document.getElementById("description-" + id).classList.toggle("show");
+        }
+
+        // Close all descriptions if the user clicks outside of any description
+        window.onclick = function(event) {
+            if (!event.target.matches('.read-more-btn')) {
+                var descriptions = document.getElementsByClassName("long-description");
+                for (var i = 0; i < descriptions.length; i++) {
+                    var openDescription = descriptions[i];
+                    if (openDescription.classList.contains('show')) {
+                        openDescription.classList.remove('show');
+                    }
+                }
+            }
+        }
+
+        let mybutton = document.getElementById("myBtn");
+        let mybutton2 = document.getElementById("myBtn2")
+
+        // When the user scrolls down 20px from the top of the document, show the button
+        window.onscroll = function() {scrollFunction()};
+
+        function scrollFunction() {
+            if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+                mybutton2.style.display = "block";
+                mybutton.style.display = "block";
+            } else {
+                mybutton2.style.display = "none";
+            }
+        }
+
+        function backToTop() {
+            scrollFunction();  
+            document.documentElement.scrollTop = 0;
+            document.body.scrollTop = 0;
+
+        }
+
+        function navigateToForm() {
+            window.location.href = "{% url 'index.html' %}";
+        }
+
+        function sortRatings() {
+            var list, i, switching, items, shouldSwitch;
+            list = document.getElementById("movieList");
+            switching = true;
+            while (switching) {
+                switching = false;
+                items = list.getElementsByClassName("grid-item");
+                for (i = 0; i < (items.length - 1); i++) {
+                    shouldSwitch = false;
+                    var voteAverage1 = parseFloat(items[i].getAttribute("data-vote-average"));
+                    var voteAverage2 = parseFloat(items[i + 1].getAttribute("data-vote-average"));
+                    if (voteAverage1 < voteAverage2) {  // Sorting in descending order
+                        shouldSwitch = true;
+                        break;
+                    }
+                }
+                if (shouldSwitch) {
+                    items[i].parentNode.insertBefore(items[i + 1], items[i]);
+                    switching = true;
+                }
+            }
+        }
+
+        function sortDates() {
+            var list, i, switching, items, shouldSwitch;
+            list = document.getElementById("movieList");
+            switching = true;
+            while (switching) {
+                switching = false;
+                items = list.getElementsByClassName("grid-item");
+                for (i = 0; i < (items.length - 1); i++) {
+                    shouldSwitch = false;
+                    var date1 = new Date(items[i].getAttribute("data-release_date"));
+                    var date2 = new Date(items[i + 1].getAttribute("data-release_date"));
+                    if (date1 < date2) {  // Sorting in descending order (newest first)
+                        shouldSwitch = true;
+                        break;
+                    }
+                }
+                if (shouldSwitch) {
+                    items[i].parentNode.insertBefore(items[i + 1], items[i]);
+                    switching = true;
+                }
+            }
+        }
+
+        const storageKey = 'theme-preference'
+
+        const onClick = () => {
+        // flip current value
+        theme.value = theme.value === 'light'
+            ? 'dark'
+            : 'light'
+
+        setPreference()
+        }
+
+        const getColorPreference = () => {
+        if (localStorage.getItem(storageKey))
+            return localStorage.getItem(storageKey)
+        else
+            return window.matchMedia('(prefers-color-scheme: dark)').matches
+            ? 'dark'
+            : 'light'
+        }
+
+        const setPreference = () => {
+        localStorage.setItem(storageKey, theme.value)
+        reflectPreference()
+        }
+
+        const reflectPreference = () => {
+        document.firstElementChild
+            .setAttribute('data-theme', theme.value)
+
+        document
+            .querySelector('#theme-toggle')
+            ?.setAttribute('aria-label', theme.value)
+        }
+
+        const theme = {
+        value: getColorPreference(),
+        }
+
+        // set early so no page flashes / CSS is made aware
+        reflectPreference()
+
+        window.onload = () => {
+        // set on load so screen readers can see latest value on the button
+        reflectPreference()
+
+        // now this script can find and listen for clicks on the control
+        document
+            .querySelector('#theme-toggle')
+            .addEventListener('click', onClick)
+        }
+
+        // sync with system changes
+        window
+        .matchMedia('(prefers-color-scheme: dark)')
+        .addEventListener('change', ({matches:isDark}) => {
+            theme.value = isDark ? 'dark' : 'light'
+            setPreference()
+        })
+    </script>
+</body>
+</html>

@@ -12,7 +12,7 @@ Moodflix is a Django-based web application that recommends movies based on a use
 
 ## 🚀 Live Demo
 
-[Click here to try Moodflix](https://moodflix-2d6f5aefae7e.herokuapp.com/moodflix/) *(replace with your actual deployed URL)*
+[Click here to try Moodflix](https://moodflix-2d6f5aefae7e.herokuapp.com/moodflix/)
 
 ## 🧰 Tech Stack
 
